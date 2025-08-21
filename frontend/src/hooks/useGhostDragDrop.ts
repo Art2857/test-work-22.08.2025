@@ -74,6 +74,7 @@ export const useGhostDragDrop = ({ onDragEnd }: UseGhostDragDropOptions) => {
           try {
             document.body.removeChild(ghostElementRef.current);
           } catch {
+            // Ignore removal errors
           }
           ghostElementRef.current = null;
         }
