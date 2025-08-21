@@ -17,12 +17,6 @@ export default function Home() {
         <main>
           <VirtualizedDataTable />
         </main>
-
-        <footer className="mt-8 sm:mt-16 py-4 sm:py-8 border-t border-gray-200 text-center text-gray-500 text-xs sm:text-sm">
-          <p className="px-2">
-            Backend: Express + TypeScript | Frontend: Next.js + TypeScript
-          </p>
-        </footer>
       </div>
     </div>
   );
