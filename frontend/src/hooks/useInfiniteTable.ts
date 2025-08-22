@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { TableItem } from '@/types';
+import { TableItem, UseInfiniteTableOptions } from '@/types';
 import { TableAPI } from '@/lib/api';
-
-interface UseInfiniteTableOptions {
-  searchTerm: string;
-  pageSize?: number;
-}
 
 export const useInfiniteTable = (options: UseInfiniteTableOptions) => {
   const [items, setItems] = useState<TableItem[]>([]);

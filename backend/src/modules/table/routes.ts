@@ -4,18 +4,11 @@ import { TableController } from './controller';
 
 export function createTableRoutes(): Router {
   const router = Router();
-
   const controller = container.get<TableController>('TableController');
 
-  const boundController = {
-    getItems: controller.getItems.bind(controller),
-    updateSelection: controller.updateSelection.bind(controller),
-    swapItems: controller.swapItems.bind(controller),
-  };
-
-  router.get('/items', boundController.getItems);
-  router.post('/selection', boundController.updateSelection);
-  router.post('/swap', boundController.swapItems);
+  router.get('/items', (req, res) => controller.getItems(req, res));
+  router.post('/selection', (req, res) => controller.updateSelection(req, res));
+  router.post('/swap', (req, res) => controller.swapItems(req, res));
 
   return router;
 }

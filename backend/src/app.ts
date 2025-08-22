@@ -1,6 +1,6 @@
 import express from 'express';
-import { config } from './core/config';
 import { corsMiddleware, requestLogger, errorHandler } from './core/middleware';
+import { HealthController } from './core/health-controller';
 import { registerTableModule, createTableRoutes } from './modules/table';
 
 export function createApp(): express.Application {
@@ -15,14 +15,8 @@ export function createApp(): express.Application {
 
   registerTableModule();
 
-  app.get('/health', (req, res) => {
-    res.json({
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      environment: config.nodeEnv,
-      tableSize: config.tableSize,
-    });
-  });
+  const healthController = new HealthController();
+  app.get('/health', (req, res) => healthController.getHealth(req, res));
 
   app.use('/api/table', createTableRoutes());
 

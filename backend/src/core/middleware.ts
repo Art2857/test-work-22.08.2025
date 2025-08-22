@@ -27,7 +27,7 @@ export function requestLogger(
 }
 
 export function errorHandler(
-  error: any,
+  error: Error,
   req: Request,
   res: Response,
   _next: NextFunction

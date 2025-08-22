@@ -14,10 +14,10 @@ export class TableController {
     };
   }
 
-  private handleError(res: Response, error: any): void {
+  private handleError(res: Response, error: unknown): void {
     const response: ApiResponse = {
       success: false,
-      error: error.message || 'Internal server error',
+      error: error instanceof Error ? error.message : 'Internal server error',
     };
     res.status(400).json(response);
   }

@@ -1,10 +1,19 @@
 import { config } from '../../core/config';
 import { ValidationError } from '../types';
 
-export function validatePagination(data: any): ValidationError[] {
+export function validatePagination(data: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  const { page, limit, search } = data;
+  if (!data || typeof data !== 'object') {
+    errors.push({ field: 'data', message: 'Invalid data provided' });
+    return errors;
+  }
+
+  const { page, limit, search } = data as {
+    page?: unknown;
+    limit?: unknown;
+    search?: unknown;
+  };
 
   if (typeof page !== 'number' || page < 1) {
     errors.push({ field: 'page', message: 'Page must be a positive number' });
@@ -25,24 +34,4 @@ export function validatePagination(data: any): ValidationError[] {
   }
 
   return errors;
-}
-
-export function validateArray(
-  field: string,
-  value: any,
-  maxLength = 1000
-): ValidationError[] {
-  if (!Array.isArray(value)) {
-    return [{ field, message: `${field} must be an array` }];
-  }
-
-  if (value.length === 0) {
-    return [{ field, message: `${field} cannot be empty` }];
-  }
-
-  if (value.length > maxLength) {
-    return [{ field, message: `${field} cannot exceed ${maxLength} items` }];
-  }
-
-  return [];
 }
