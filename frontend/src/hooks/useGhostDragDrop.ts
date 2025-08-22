@@ -11,6 +11,42 @@ export const useGhostDragDrop = ({ onDragEnd }: UseGhostDragDropOptions) => {
   const ghostElementRef = useRef<HTMLElement | null>(null);
   const dragStartOffset = useRef({ x: 0, y: 0 });
 
+  const currentListenersRef = useRef<{
+    handleMove?: (e: PointerEvent) => void;
+    handleEnd?: (e: PointerEvent) => void;
+  }>({});
+
+  const cancelDrag = useCallback(() => {
+    if (!isDragging) return;
+
+    if (
+      currentListenersRef.current.handleMove &&
+      currentListenersRef.current.handleEnd
+    ) {
+      document.removeEventListener(
+        'pointermove',
+        currentListenersRef.current.handleMove
+      );
+      document.removeEventListener(
+        'pointerup',
+        currentListenersRef.current.handleEnd
+      );
+    }
+
+    if (ghostElementRef.current) {
+      try {
+        document.body.removeChild(ghostElementRef.current);
+      } catch {
+        // ignore
+      }
+      ghostElementRef.current = null;
+    }
+
+    setIsDragging(false);
+    setDraggedId(null);
+    currentListenersRef.current = {};
+  }, [isDragging]);
+
   const handleDragStart = useCallback(
     (event: React.PointerEvent, itemId: number, element: HTMLElement) => {
       event.preventDefault();
@@ -85,8 +121,10 @@ export const useGhostDragDrop = ({ onDragEnd }: UseGhostDragDropOptions) => {
 
         setIsDragging(false);
         setDraggedId(null);
+        currentListenersRef.current = {};
       };
 
+      currentListenersRef.current = { handleMove, handleEnd };
       document.addEventListener('pointermove', handleMove);
       document.addEventListener('pointerup', handleEnd);
     },
@@ -97,5 +135,6 @@ export const useGhostDragDrop = ({ onDragEnd }: UseGhostDragDropOptions) => {
     isDragging,
     draggedId,
     handleDragStart,
+    cancelDrag,
   };
 };

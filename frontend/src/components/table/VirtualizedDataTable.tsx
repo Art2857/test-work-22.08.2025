@@ -3,19 +3,19 @@
 import React from 'react';
 
 import { SearchBar } from '../SearchBar';
-import { TableHeader } from './TableHeader';
 import { ErrorDisplay } from './ErrorDisplay';
 import { LoadingIndicator } from './LoadingIndicator';
-import { GhostDragTableRow } from './GhostDragTableRow';
+import { EmptyState } from './EmptyState';
+import { TableContainer } from './TableContainer';
 
 import { useInfiniteTable } from '@/hooks/useInfiniteTable';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useGhostDragDrop } from '@/hooks/useGhostDragDrop';
 import { useVirtualization } from '@/hooks/useVirtualization';
 import { useSelection } from '@/hooks/useSelection';
+import { useUniqueItems } from '@/hooks/useUniqueItems';
+import { useTableDragDrop } from '@/hooks/useTableDragDrop';
 
 import { TABLE_CONSTANTS } from '@/constants/table';
-import type { TableItem } from '@/types';
 
 export const VirtualizedDataTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -39,14 +39,7 @@ export const VirtualizedDataTable: React.FC = () => {
     pageSize: TABLE_CONSTANTS.DEFAULT_PAGE_SIZE,
   });
 
-  const uniqueItems = React.useMemo(() => {
-    const seen = new Set<number>();
-    return items.filter((item: TableItem) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    });
-  }, [items]);
+  const uniqueItems = useUniqueItems(items);
 
   const allIds = React.useMemo(
     () => uniqueItems.map((item) => item.id),
@@ -58,17 +51,9 @@ export const VirtualizedDataTable: React.FC = () => {
     allIds,
   });
 
-  const handleGhostDragEnd = React.useCallback(
-    (draggedId: number, targetId: number) => {
-      if (draggedId !== targetId) {
-        swapItems(draggedId, targetId);
-      }
-    },
-    [swapItems]
-  );
-
-  const { isDragging, draggedId, handleDragStart } = useGhostDragDrop({
-    onDragEnd: handleGhostDragEnd,
+  const { isDragging, ghostDragProps } = useTableDragDrop({
+    searchTerm,
+    onItemsSwap: swapItems,
   });
 
   const loadMoreCondition = React.useMemo(
@@ -95,18 +80,13 @@ export const VirtualizedDataTable: React.FC = () => {
     [toggleSelection]
   );
 
-  const ghostDragProps = React.useMemo(
-    () => ({
-      isDragging,
-      draggedId,
-      onDragStart: handleDragStart,
-    }),
-    [isDragging, draggedId, handleDragStart]
-  );
-
   if (error) {
     return <ErrorDisplay error={error} />;
   }
+
+  const showEmptyState =
+    !isLoading && uniqueItems.length === 0 && searchTerm.trim();
+  const showTable = !isLoading && uniqueItems.length > 0;
 
   return (
     <div className="w-full space-y-4">
@@ -122,70 +102,19 @@ export const VirtualizedDataTable: React.FC = () => {
 
       {isLoading && <LoadingIndicator />}
 
-      {!isLoading && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <TableHeader />
+      {showEmptyState && <EmptyState searchTerm={searchTerm} />}
 
-          <div
-            ref={parentRef}
-            className="overflow-y-auto"
-            style={{
-              height: 'calc(100vh - 16rem)',
-              minHeight: '400px',
-              maxHeight: '600px',
-              contain: 'layout style paint',
-              willChange: 'scroll-position',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            <div
-              style={{
-                height: `${virtualizer.getTotalSize()}px`,
-                width: '100%',
-                position: 'relative',
-              }}
-            >
-              {virtualItems.map((virtualItem) => {
-                const item = uniqueItems[virtualItem.index];
-                return (
-                  <GhostDragTableRow
-                    key={item.id}
-                    item={item}
-                    isSelected={isSelected(item.id)}
-                    onToggleSelection={handleToggleSelection}
-                    style={{
-                      position: 'absolute',
-                      top: `${virtualItem.start}px`,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualItem.size}px`,
-                    }}
-                    {...ghostDragProps}
-                  />
-                );
-              })}
-
-              {isLoadingMore && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: `${virtualizer.getTotalSize()}px`,
-                    left: 0,
-                    right: 0,
-                    height: '60px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f9fafb',
-                    borderTop: '1px solid #e5e7eb',
-                  }}
-                >
-                  <LoadingIndicator className="py-0" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {showTable && (
+        <TableContainer
+          parentRef={parentRef}
+          virtualizer={virtualizer}
+          virtualItems={virtualItems}
+          uniqueItems={uniqueItems}
+          isSelected={isSelected}
+          onToggleSelection={handleToggleSelection}
+          ghostDragProps={ghostDragProps}
+          isLoadingMore={isLoadingMore}
+        />
       )}
     </div>
   );

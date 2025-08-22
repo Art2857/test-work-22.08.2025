@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface TableItem {
   id: number;
   value: string;
@@ -20,4 +22,24 @@ export interface ApiResponse<T> {
 export interface UseInfiniteTableOptions {
   searchTerm: string;
   pageSize?: number;
+}
+
+export interface VirtualItem {
+  index: number;
+  start: number;
+  size: number;
+}
+
+export interface Virtualizer {
+  getTotalSize: () => number;
+}
+
+export interface GhostDragProps {
+  isDragging: boolean;
+  draggedId: number | null;
+  onDragStart: (
+    event: React.PointerEvent,
+    itemId: number,
+    element: HTMLElement
+  ) => void;
 }
