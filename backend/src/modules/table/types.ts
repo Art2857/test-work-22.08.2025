@@ -4,9 +4,9 @@ export interface TableItem {
   selected: boolean;
 }
 
-export interface SwapRequest {
-  itemId1: number;
-  itemId2: number;
+export interface InsertRequest {
+  itemId: number;
+  targetId: number;
 }
 
 export interface SelectionRequest {

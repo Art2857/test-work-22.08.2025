@@ -7,6 +7,7 @@ import { ITitleGeneratorService } from './services/title-generator.service';
 export class TableRepository implements ITableRepository {
   private selectedIds = new Set<number>();
   private sortOrder: number[] = [];
+  private sortOrderIndex = new Map<number, number>(); // itemId -> index
 
   constructor(private readonly titleGenerator: ITitleGeneratorService) {
     this.initializeSortOrder();
@@ -17,6 +18,14 @@ export class TableRepository implements ITableRepository {
 
   private initializeSortOrder(): void {
     this.sortOrder = Array.from({ length: config.tableSize }, (_, i) => i + 1);
+    this.rebuildSortOrderIndex();
+  }
+
+  private rebuildSortOrderIndex(): void {
+    this.sortOrderIndex.clear();
+    this.sortOrder.forEach((itemId, index) => {
+      this.sortOrderIndex.set(itemId, index);
+    });
   }
 
   private generateItem(id: number): TableItem {
@@ -76,23 +85,33 @@ export class TableRepository implements ITableRepository {
     });
   }
 
-  async swapItems(itemId1: number, itemId2: number): Promise<void> {
-    const index1 = this.sortOrder.indexOf(itemId1);
-    const index2 = this.sortOrder.indexOf(itemId2);
+  async insertItem(itemId: number, targetId: number): Promise<void> {
+    const currentIndex = this.sortOrderIndex.get(itemId);
+    const targetIndex = this.sortOrderIndex.get(targetId);
 
-    if (index1 === -1 || index2 === -1) {
-      logger.warn(`Cannot swap items: ${itemId1} or ${itemId2} not found`);
+    if (currentIndex === undefined) {
+      logger.warn(`Cannot move item: ${itemId} not found`);
       return;
     }
 
-    [this.sortOrder[index1], this.sortOrder[index2]] = [
-      this.sortOrder[index2],
-      this.sortOrder[index1],
-    ];
+    if (targetIndex === undefined) {
+      logger.warn(`Cannot move item: target ${targetId} not found`);
+      return;
+    }
 
-    logger.debug(`Swapped items ${itemId1} ⇄ ${itemId2}`, {
-      position1: index1,
-      position2: index2,
+    if (currentIndex === targetIndex) {
+      return;
+    }
+
+    const [movedItem] = this.sortOrder.splice(currentIndex, 1);
+    const newTargetIndex = targetIndex;
+    this.sortOrder.splice(newTargetIndex, 0, movedItem);
+
+    this.rebuildSortOrderIndex();
+
+    logger.debug(`Moved item ${itemId} to position of item ${targetId}`, {
+      fromPosition: currentIndex,
+      toPosition: newTargetIndex,
     });
   }
 }

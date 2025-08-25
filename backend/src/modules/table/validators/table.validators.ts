@@ -1,6 +1,6 @@
 import { config } from '../../../core/config';
 import { ValidationError } from '../../../common/types';
-import { SwapRequest, SelectionRequest } from '../types';
+import { InsertRequest, SelectionRequest } from '../types';
 
 export function validateItemId(
   id: number,
@@ -55,14 +55,16 @@ export function validateSelectionRequest(
   return errors;
 }
 
-export function validateSwapRequest(request: SwapRequest): ValidationError[] {
+export function validateInsertRequest(
+  request: InsertRequest
+): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  errors.push(...validateItemId(request.itemId1, 'itemId1'));
-  errors.push(...validateItemId(request.itemId2, 'itemId2'));
+  errors.push(...validateItemId(request.itemId, 'itemId'));
+  errors.push(...validateItemId(request.targetId, 'targetId'));
 
-  if (request.itemId1 === request.itemId2) {
-    errors.push({ field: 'itemId2', message: 'Cannot swap item with itself' });
+  if (request.itemId === request.targetId) {
+    errors.push({ field: 'targetId', message: 'Cannot move item to itself' });
   }
 
   return errors;

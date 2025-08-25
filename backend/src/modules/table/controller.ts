@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PaginationQuery, ApiResponse } from '../../common';
-import { SwapRequest, SelectionRequest } from './types';
+import { InsertRequest, SelectionRequest } from './types';
 import { ITableService } from './interfaces';
 
 export class TableController {
@@ -50,11 +50,11 @@ export class TableController {
     }
   }
 
-  async swapItems(req: Request, res: Response): Promise<void> {
+  async insertItem(req: Request, res: Response): Promise<void> {
     try {
-      const request: SwapRequest = req.body;
-      await this.tableService.swapItems(request);
-      this.sendSuccess(res, { message: 'Items swapped successfully' });
+      const request: InsertRequest = req.body;
+      await this.tableService.insertItem(request);
+      this.sendSuccess(res, { message: 'Item moved successfully' });
     } catch (error) {
       this.handleError(res, error);
     }

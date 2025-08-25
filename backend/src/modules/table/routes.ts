@@ -8,7 +8,7 @@ export function createTableRoutes(): Router {
 
   router.get('/items', (req, res) => controller.getItems(req, res));
   router.post('/selection', (req, res) => controller.updateSelection(req, res));
-  router.post('/swap', (req, res) => controller.swapItems(req, res));
+  router.post('/insert', (req, res) => controller.insertItem(req, res));
 
   return router;
 }

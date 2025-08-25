@@ -3,11 +3,14 @@ import type { TableItem } from '@/types';
 
 export const useUniqueItems = (items: TableItem[]) => {
   return React.useMemo(() => {
-    const seen = new Set<number>();
-    return items.filter((item: TableItem) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    });
+    if (items.length === 0) return [];
+
+    const uniqueMap = new Map<number, TableItem>();
+
+    for (const item of items) {
+      uniqueMap.set(item.id, item);
+    }
+
+    return Array.from(uniqueMap.values());
   }, [items]);
 };

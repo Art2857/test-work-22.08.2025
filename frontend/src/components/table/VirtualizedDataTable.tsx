@@ -32,7 +32,7 @@ export const VirtualizedDataTable: React.FC = () => {
     hasMore,
     selectedIds,
     toggleSelection,
-    swapItems,
+    insertItem,
     loadMoreItems,
   } = useInfiniteTable({
     searchTerm: debouncedSearchTerm,
@@ -52,17 +52,12 @@ export const VirtualizedDataTable: React.FC = () => {
   });
 
   const { isDragging, ghostDragProps } = useTableDragDrop({
-    searchTerm,
-    onItemsSwap: swapItems,
+    searchTerm: debouncedSearchTerm,
+    onItemsSwap: insertItem,
   });
 
-  const loadMoreCondition = React.useMemo(
-    () =>
-      hasMore && !isLoadingMore && !isLoading && !isDragging
-        ? loadMoreItems
-        : undefined,
-    [hasMore, isLoadingMore, isLoading, isDragging, loadMoreItems]
-  );
+  const shouldLoadMore = hasMore && !isLoadingMore && !isLoading && !isDragging;
+  const loadMoreCondition = shouldLoadMore ? loadMoreItems : undefined;
 
   const { parentRef, virtualizer, virtualItems } = useVirtualization({
     itemCount: uniqueItems.length,
@@ -73,12 +68,9 @@ export const VirtualizedDataTable: React.FC = () => {
     onLoadMore: loadMoreCondition,
   });
 
-  const handleToggleSelection = React.useCallback(
-    (id: number, selected: boolean) => {
-      toggleSelection([id], selected);
-    },
-    [toggleSelection]
-  );
+  const handleToggleSelection = React.useCallback(toggleSelection, [
+    toggleSelection,
+  ]);
 
   if (error) {
     return <ErrorDisplay error={error} />;

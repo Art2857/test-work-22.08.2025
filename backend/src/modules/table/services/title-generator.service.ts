@@ -1,4 +1,3 @@
-import { logger } from '../../../common';
 import { ADJECTIVES, NOUNS, PHRASES, PREFIXES } from '../constants/title-data';
 
 export interface ITitleGeneratorService {
@@ -7,6 +6,7 @@ export interface ITitleGeneratorService {
 
 export class TitleGeneratorService implements ITitleGeneratorService {
   private readonly titleCache = new Map<number, string>();
+  private readonly maxCacheSize = 10000;
 
   private getSeededRandom(id: number, multiplier: number = 1): number {
     const seed = id * 9301 + 49297 + multiplier * 1231;
@@ -14,11 +14,9 @@ export class TitleGeneratorService implements ITitleGeneratorService {
   }
 
   generateTitle(id: number): string {
-    if (this.titleCache.has(id)) {
-      const cachedTitle = this.titleCache.get(id);
-      if (cachedTitle) {
-        return cachedTitle;
-      }
+    const cached = this.titleCache.get(id);
+    if (cached) {
+      return cached;
     }
 
     const random1 = this.getSeededRandom(id, 1);
@@ -61,8 +59,14 @@ export class TitleGeneratorService implements ITitleGeneratorService {
       }
     }
 
+    if (this.titleCache.size >= this.maxCacheSize) {
+      const firstKey = this.titleCache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.titleCache.delete(firstKey);
+      }
+    }
+
     this.titleCache.set(id, title);
-    logger.debug(`Generated title for item ${id}: "${title}"`);
     return title;
   }
 }

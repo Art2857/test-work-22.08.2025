@@ -1,8 +1,8 @@
 import { PaginationQuery, PaginationResult } from '../../../common';
-import { TableItem, SwapRequest, SelectionRequest } from '../types';
+import { TableItem, InsertRequest, SelectionRequest } from '../types';
 
 export interface ITableService {
   getItems(query: PaginationQuery): Promise<PaginationResult<TableItem>>;
   updateSelection(request: SelectionRequest): Promise<void>;
-  swapItems(request: SwapRequest): Promise<void>;
+  insertItem(request: InsertRequest): Promise<void>;
 }

@@ -53,22 +53,22 @@ export class TableAPI {
     }
   }
 
-  static async swapItems(itemId1: number, itemId2: number): Promise<void> {
-    const response = await fetch(`${API_URL}/table/swap`, {
+  static async insertItem(itemId: number, targetId: number): Promise<void> {
+    const response = await fetch(`${API_URL}/table/insert`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ itemId1, itemId2 }),
+      body: JSON.stringify({ itemId, targetId }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to swap items');
+      throw new Error('Failed to move item');
     }
 
     const apiResponse: ApiResponse<{ message: string }> = await response.json();
     if (!apiResponse.success) {
-      throw new Error(apiResponse.error || 'Failed to swap items');
+      throw new Error(apiResponse.error || 'Failed to move item');
     }
   }
 }

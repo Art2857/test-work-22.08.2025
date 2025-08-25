@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { TableItem, UseInfiniteTableOptions } from '@/types';
 import { TableAPI } from '@/lib/api';
+import { moveItemById } from '@/utils/array-utils';
 
 export const useInfiniteTable = (options: UseInfiniteTableOptions) => {
   const [items, setItems] = useState<TableItem[]>([]);
@@ -99,22 +100,18 @@ export const useInfiniteTable = (options: UseInfiniteTableOptions) => {
     loadInitialItems();
   }, [loadInitialItems]);
 
-  const toggleSelection = useCallback(
+  const updateSelection = useCallback(
     async (itemIds: number[], selected: boolean) => {
       try {
-        setItems((prev) =>
-          prev.map((item) =>
-            itemIds.includes(item.id) ? { ...item, selected } : item
-          )
-        );
-
         await TableAPI.updateSelection(itemIds, selected);
+
+        setItems((prev) => {
+          const idsSet = new Set(itemIds);
+          return prev.map((item) =>
+            idsSet.has(item.id) ? { ...item, selected } : item
+          );
+        });
       } catch (err) {
-        setItems((prev) =>
-          prev.map((item) =>
-            itemIds.includes(item.id) ? { ...item, selected: !selected } : item
-          )
-        );
         setError(
           err instanceof Error ? err.message : 'Failed to update selection'
         );
@@ -123,28 +120,26 @@ export const useInfiniteTable = (options: UseInfiniteTableOptions) => {
     []
   );
 
-  const swapItems = useCallback(
-    async (itemId1: number, itemId2: number) => {
+  const toggleSelection = useCallback(
+    (itemId: number, selected: boolean) => updateSelection([itemId], selected),
+    [updateSelection]
+  );
+
+  const toggleMultipleSelection = useCallback(
+    (itemIds: number[], selected: boolean) =>
+      updateSelection(itemIds, selected),
+    [updateSelection]
+  );
+
+  const insertItem = useCallback(
+    async (itemId: number, targetId: number) => {
       try {
-        setItems((prevItems) => {
-          const itemsCopy = [...prevItems];
-          const index1 = itemsCopy.findIndex((item) => item.id === itemId1);
-          const index2 = itemsCopy.findIndex((item) => item.id === itemId2);
+        setItems((prevItems) => moveItemById(prevItems, itemId, targetId));
 
-          if (index1 === -1 || index2 === -1) return prevItems;
-
-          [itemsCopy[index1], itemsCopy[index2]] = [
-            itemsCopy[index2],
-            itemsCopy[index1],
-          ];
-
-          return itemsCopy;
-        });
-
-        await TableAPI.swapItems(itemId1, itemId2);
+        await TableAPI.insertItem(itemId, targetId);
       } catch (err) {
         await loadInitialItems();
-        setError(err instanceof Error ? err.message : 'Failed to swap items');
+        setError(err instanceof Error ? err.message : 'Failed to move item');
       }
     },
     [loadInitialItems]
@@ -175,7 +170,8 @@ export const useInfiniteTable = (options: UseInfiniteTableOptions) => {
     hasMore,
     selectedIds,
     toggleSelection,
-    swapItems,
+    toggleMultipleSelection,
+    insertItem,
     loadMoreItems,
 
     refresh: loadInitialItems,

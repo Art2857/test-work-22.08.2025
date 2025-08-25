@@ -3,11 +3,11 @@ import {
   PaginationResult,
   validatePagination,
 } from '../../common';
-import { TableItem, SwapRequest, SelectionRequest } from './types';
+import { TableItem, InsertRequest, SelectionRequest } from './types';
 import { ITableRepository, ITableService } from './interfaces';
 import {
   validateSelectionRequest,
-  validateSwapRequest,
+  validateInsertRequest,
 } from './validators/table.validators';
 import { throwIfErrors } from './utils/validation-helper';
 
@@ -28,10 +28,10 @@ export class TableService implements ITableService {
     await this.repository.updateSelection(request.itemIds, request.selected);
   }
 
-  async swapItems(request: SwapRequest): Promise<void> {
-    const errors = validateSwapRequest(request);
+  async insertItem(request: InsertRequest): Promise<void> {
+    const errors = validateInsertRequest(request);
     throwIfErrors(errors);
 
-    await this.repository.swapItems(request.itemId1, request.itemId2);
+    await this.repository.insertItem(request.itemId, request.targetId);
   }
 }
